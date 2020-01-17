@@ -1,6 +1,7 @@
 package com.example.androidble.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -9,7 +10,9 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Bluetooth {
 
@@ -17,10 +20,13 @@ public class Bluetooth {
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
 
+    private Set<BluetoothDevice> devicesSet = new HashSet<>();
     private Context context;
     private Handler handler;
     private boolean mIsScanning;
     private static BluetoothAdapter bluetoothAdapter;
+
+    private BluetoothScanListener bluetoothScanListener ;
 
     public Bluetooth(Context context) {
         this.context = context;
@@ -33,15 +39,14 @@ public class Bluetooth {
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
 
+            devicesSet.add(result.getDevice());
             Log.e(TAG,result.getDevice().getAddress());
-
         }
 
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             super.onBatchScanResults(results);
 
-            Log.e(TAG,"Scan finish");
         }
 
         @Override
@@ -60,6 +65,9 @@ public class Bluetooth {
     public void scanBleDevices(){
         Log.e(TAG,"Scan for BLE devices");
         final BluetoothLeScanner leScanner = bluetoothAdapter.getBluetoothLeScanner();
+        if(bluetoothScanListener != null){
+            bluetoothScanListener.onStartScanning();
+        }
         if(isBluetoothEnabled()){
 
             handler.postDelayed(new Runnable() {
@@ -67,6 +75,10 @@ public class Bluetooth {
                 public void run() {
                     mIsScanning = false;
                     leScanner.stopScan(scanCallback);
+                    Log.e(TAG,"Scan finish");
+                    if(bluetoothScanListener != null){
+                        bluetoothScanListener.onStopScanning(devicesSet);
+                    }
                 }
             },SCAN_PERIOD);
 
@@ -74,7 +86,6 @@ public class Bluetooth {
             leScanner.startScan(scanCallback);
 
         }else {
-
             mIsScanning = false;
             leScanner.stopScan(scanCallback);
         }
@@ -93,6 +104,14 @@ public class Bluetooth {
 
     }
 
+    public void setBluetoothScannerListener(BluetoothScanListener listener){
+        bluetoothScanListener = listener;
+    }
 
+
+    public interface BluetoothScanListener{
+        void onStartScanning();
+        void onStopScanning(Set<BluetoothDevice>devices);
+    }
 
 }
