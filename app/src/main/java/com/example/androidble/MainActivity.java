@@ -19,6 +19,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.example.androidble.adapters.DevicesAdapter;
 import com.example.androidble.bluetooth.Bluetooth;
@@ -28,15 +30,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class MainActivity extends AppCompatActivity implements Bluetooth.BluetoothScanListener {
+public class MainActivity extends AppCompatActivity implements Bluetooth.BluetoothScanListener, DevicesAdapter.ItemClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int REQUEST_ENABLE_BT = 1;
 
     private List<BluetoothDevice>dataSet;
 
-    private RecyclerView recyclerView;
-    private RecyclerView.LayoutManager layoutManager;
+    private ProgressBar progressBar;
     private DevicesAdapter adapter;
     private Bluetooth bluetooth;
 
@@ -52,19 +53,21 @@ public class MainActivity extends AppCompatActivity implements Bluetooth.Bluetoo
 
         bluetooth = new Bluetooth(this);
 
+        //Check if bluetooth is turn on
         if (!bluetooth.isBluetoothEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }else{
+
             checkAndRequestPermissions();
         }
 
         bluetooth.setBluetoothScannerListener(this);
-
+        progressBar = findViewById(R.id.progressBar);
         dataSet = new ArrayList<>();
-        recyclerView = findViewById(R.id.device_list);
-        layoutManager = new LinearLayoutManager(this);
-        adapter = new DevicesAdapter(dataSet);
+        RecyclerView recyclerView = findViewById(R.id.device_list);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        adapter = new DevicesAdapter(dataSet,this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
 
@@ -114,8 +117,8 @@ public class MainActivity extends AppCompatActivity implements Bluetooth.Bluetoo
             }
         }
     };
-
-    private  boolean checkAndRequestPermissions() {
+    //Check permissions and if not granted request them
+    private boolean checkAndRequestPermissions() {
 
         int permissionBluetooth = ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH);
         int locationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
@@ -136,13 +139,20 @@ public class MainActivity extends AppCompatActivity implements Bluetooth.Bluetoo
 
     @Override
     public void onStartScanning() {
-
+        progressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void onStopScanning(Set<BluetoothDevice> devices) {
-        List<BluetoothDevice> list = new ArrayList<>();
-        list.addAll(devices);
-        adapter.updateDatase(list);
+        progressBar.setVisibility(View.INVISIBLE);
+        if(devices.size()>0){
+            dataSet = new ArrayList<>(devices);
+            adapter.updateDataSet(dataSet);
+        }
+    }
+
+    @Override
+    public void onItemClick(int position) {
+
     }
 }

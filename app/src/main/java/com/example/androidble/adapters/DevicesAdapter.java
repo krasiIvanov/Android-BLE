@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,12 +16,19 @@ import java.util.List;
 
 public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.ViewHolder> {
 
-    private List<BluetoothDevice> mdataset;
+    private List<BluetoothDevice> mDataSet;
 
-    public DevicesAdapter(List<BluetoothDevice> dataset) {
+    private static ItemClickListener callback;
 
-        mdataset = dataset;
+    public DevicesAdapter(List<BluetoothDevice> dataSet, ItemClickListener callback) {
 
+        mDataSet = dataSet;
+        setCallback(callback);
+
+    }
+
+    private void setCallback(ItemClickListener callback) {
+        DevicesAdapter.callback = callback;
     }
 
     @NonNull
@@ -35,29 +43,46 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull DevicesAdapter.ViewHolder holder, int position) {
 
-        holder.text.setText(mdataset.get(position).getAddress());
+        holder.text.setText(mDataSet.get(position).getAddress());
 
     }
 
     @Override
     public int getItemCount() {
-        return mdataset.size();
+        return mDataSet.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-
+        LinearLayout row;
         TextView text ;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
+            row = itemView.findViewById(R.id.device_row);
             text = itemView.findViewById(R.id.text);
+
+            row.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(callback != null){
+                        callback.onItemClick(getAdapterPosition());
+                    }
+                }
+            });
 
         }
     }
 
-    public void updateDatase(List<BluetoothDevice> devices){
-        this.mdataset = devices;
+    public void updateDataSet(List<BluetoothDevice> devices){
+        this.mDataSet = devices;
         notifyDataSetChanged();
     }
+
+    public interface ItemClickListener{
+
+        void onItemClick(int position);
+
+    }
+
 }
