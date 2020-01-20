@@ -43,7 +43,20 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull DevicesAdapter.ViewHolder holder, int position) {
 
-        holder.text.setText(mDataSet.get(position).getAddress());
+        BluetoothDevice device = mDataSet.get(position);
+
+        if(device.getName() == null){
+            holder.name.setText("Unknown");
+        }else{
+            holder.name.setText(device.getName());
+        }
+        holder.address.setText(device.getAddress());
+        int servicesCount = 0;
+        if(device.getUuids() != null){
+            servicesCount = device.getUuids().length;
+        }
+
+        holder.services.setText("Services : " + servicesCount);
 
     }
 
@@ -54,13 +67,17 @@ public class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.ViewHold
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         LinearLayout row;
-        TextView text ;
+        TextView name;
+        TextView address;
+        TextView services;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
             row = itemView.findViewById(R.id.device_row);
-            text = itemView.findViewById(R.id.text);
+            name = itemView.findViewById(R.id.device_name);
+            address = itemView.findViewById(R.id.device_address);
+            services = itemView.findViewById(R.id.device_services);
 
             row.setOnClickListener(new View.OnClickListener() {
                 @Override

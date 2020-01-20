@@ -14,7 +14,9 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements Bluetooth.Bluetoo
             checkAndRequestPermissions();
         }
 
+
         bluetooth.setBluetoothScannerListener(this);
         progressBar = findViewById(R.id.progressBar);
         dataSet = new ArrayList<>();
@@ -72,6 +75,19 @@ public class MainActivity extends AppCompatActivity implements Bluetooth.Bluetoo
         recyclerView.setAdapter(adapter);
 
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(gattUpdateReceiver,new IntentFilter(BluetoothLeScanService.ACTION_GATT_CONNECTED));
+        registerReceiver(gattUpdateReceiver,new IntentFilter(BluetoothLeScanService.ACTION_GATT_DISCONNECTED));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(gattUpdateReceiver);
     }
 
     @Override
@@ -106,13 +122,10 @@ public class MainActivity extends AppCompatActivity implements Bluetooth.Bluetoo
             final String action = intent.getAction();
             if (BluetoothLeScanService.ACTION_GATT_CONNECTED.equals(action)) {
 
-            } else if (BluetoothLeScanService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                Intent profile = new Intent(MainActivity.this,DeviceProfileActivity.class);
+                startActivity(profile);
 
-            } else if (BluetoothLeScanService.
-                    ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                // Show all the supported services and characteristics on the
-                // user interface.
-            } else if (BluetoothLeScanService.ACTION_DATA_AVAILABLE.equals(action)) {
+            } else if (BluetoothLeScanService.ACTION_GATT_DISCONNECTED.equals(action)) {
 
             }
         }
@@ -153,6 +166,14 @@ public class MainActivity extends AppCompatActivity implements Bluetooth.Bluetoo
 
     @Override
     public void onItemClick(int position) {
+
+        progressBar.setVisibility(View.VISIBLE);
+
+        Intent service = new Intent(this,BluetoothLeScanService.class);
+        service.setAction("conn");
+        service.putExtra("dev",dataSet.get(position));
+
+        startForegroundService(service);
 
     }
 }

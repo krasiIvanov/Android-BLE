@@ -3,13 +3,12 @@ package com.example.androidble.services;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.os.Build;
@@ -19,10 +18,9 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import com.example.androidble.MainActivity;
-import com.example.androidble.R;
 import com.example.androidble.bluetooth.Bluetooth;
 
+import java.util.List;
 import java.util.UUID;
 
 public class BluetoothLeScanService extends Service{
@@ -31,6 +29,7 @@ public class BluetoothLeScanService extends Service{
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
+
 
     public final static String ACTION_GATT_CONNECTED =
             "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -43,18 +42,45 @@ public class BluetoothLeScanService extends Service{
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
 
-    public final static UUID UUID_HEART_RATE_MEASUREMENT =
-            UUID.fromString("UUID");
+    public final static UUID UUID_BATTERY_SERVICE =
+            UUID.fromString("0000180F-0000-1000-8000-00805f9b34fb");
 
-    private BluetoothManager bluetoothManager;
-    private BluetoothAdapter bluetoothAdapter;
-    private String bluetoothDeviceAddress;
-    private BluetoothGatt bluetoothGatt;
+
+
+    private BluetoothDevice device;
+    private static BluetoothGatt bluetoothGatt;
     private int connectionState = STATE_DISCONNECTED;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        startForeground(1,buildNotification());
+
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if(intent != null){
+            if(intent.getAction().equals("conn") && connectionState != STATE_CONNECTED){
+                device = intent.getParcelableExtra("dev");
+                bluetoothGatt = device.connectGatt(getApplicationContext(),true,gattCallback,2);
+            }
+        }
+
+        return START_NOT_STICKY;
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
     // Various callback methods defined by the BLE API.
     private final BluetoothGattCallback gattCallback =
             new BluetoothGattCallback() {
+
                 @Override
                 public void onConnectionStateChange(BluetoothGatt gatt, int status,
                                                     int newState) {
@@ -63,15 +89,16 @@ public class BluetoothLeScanService extends Service{
                         intentAction = ACTION_GATT_CONNECTED;
                         connectionState = STATE_CONNECTED;
                         broadcastUpdate(intentAction);
-                        Log.i(TAG, "Connected to GATT server.");
-                        Log.i(TAG, "Attempting to start service discovery:" +
-                                bluetoothGatt.discoverServices());
+                        Log.e(TAG, "Connected to GATT server.");
+                        Log.e(TAG, "Attempting to start service discovery");
+                        bluetoothGatt.discoverServices();
 
                     } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                        intentAction = ACTION_GATT_DISCONNECTED;
-                        connectionState = STATE_DISCONNECTED;
-                        Log.i(TAG, "Disconnected from GATT server.");
-                        broadcastUpdate(intentAction);
+
+                            intentAction = ACTION_GATT_DISCONNECTED;
+                            connectionState = STATE_DISCONNECTED;
+                            Log.e(TAG, "Disconnected from GATT server.");
+                            broadcastUpdate(intentAction);
                     }
                 }
 
@@ -80,8 +107,9 @@ public class BluetoothLeScanService extends Service{
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                     if (status == BluetoothGatt.GATT_SUCCESS) {
                         broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+
                     } else {
-                        Log.w(TAG, "onServicesDiscovered received: " + status);
+                        Log.e(TAG, "onServicesDiscovered received: " + status);
                     }
                 }
 
@@ -94,6 +122,7 @@ public class BluetoothLeScanService extends Service{
                         broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
                     }
                 }
+
 
             };
 
@@ -109,7 +138,7 @@ public class BluetoothLeScanService extends Service{
 
         // This is special handling for the Heart Rate Measurement profile. Data
         // parsing is carried out as per profile specifications.
-        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
+        if (UUID_BATTERY_SERVICE.equals(characteristic.getUuid())) {
             int flag = characteristic.getProperties();
             int format = -1;
             if ((flag & 0x01) != 0) {
@@ -136,22 +165,6 @@ public class BluetoothLeScanService extends Service{
         sendBroadcast(intent);
     }
 
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        startForeground(1,buildNotification());
-
-
-    }
-
-
     private Notification buildNotification(){
 
         Notification notification = new NotificationCompat.Builder(getApplicationContext(), "ID")
@@ -173,6 +186,13 @@ public class BluetoothLeScanService extends Service{
         }
 
         return notification;
+    }
+
+    public static List<BluetoothGattService> getServices(){
+        if(bluetoothGatt == null){
+            return null;
+        }
+        return bluetoothGatt.getServices();
     }
 
 }

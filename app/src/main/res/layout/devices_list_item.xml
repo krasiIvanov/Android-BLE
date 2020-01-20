@@ -2,14 +2,34 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/device_row"
-    android:orientation="horizontal"
+    android:layout_marginTop="1dp"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:minHeight="45dp"
+    android:gravity="center_vertical"
+    android:background="@color/white">
 
     <TextView
-        android:id="@+id/text"
+        android:id="@+id/device_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"/>
+        android:textSize="18sp"
+        android:layout_marginStart="15dp"/>
+
+    <TextView
+        android:id="@+id/device_address"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="2dp"/>
+    <TextView
+        android:id="@+id/device_services"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="2dp"/>
 
 </LinearLayout>
