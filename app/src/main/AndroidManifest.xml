@@ -14,7 +14,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".DeviceProfileActivity"></activity>
+        <activity android:name=".ServiceActivity"></activity>
+        <activity android:name=".DeviceProfileActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,9 +24,10 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".services.BluetoothLeScanService"
-            android:exported="false"
-            android:enabled="true"/>
+        <service
+            android:name=".services.BluetoothLeScanService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

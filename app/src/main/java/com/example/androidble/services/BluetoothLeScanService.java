@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
@@ -19,7 +20,10 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.example.androidble.bluetooth.Bluetooth;
+import com.example.androidble.utils.GattDescriptors;
 
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -123,7 +127,26 @@ public class BluetoothLeScanService extends Service{
                     }
                 }
 
+                @Override
+                public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                    if(status == BluetoothGatt.GATT_SUCCESS){
+                        Log.e(TAG,"Characteristic write");
+                    }
+                }
 
+                @Override
+                public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+
+                    Log.e(TAG,"Characteristic changed");
+
+                }
+
+                @Override
+                public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+                    if(status == BluetoothGatt.GATT_SUCCESS){
+                        Log.e(TAG,"On description write");
+                    }
+                }
             };
 
 
@@ -193,6 +216,58 @@ public class BluetoothLeScanService extends Service{
             return null;
         }
         return bluetoothGatt.getServices();
+    }
+
+    public static void setSubscribeCharacteristic(BluetoothGattCharacteristic characteristic,boolean enable){
+
+        if(bluetoothGatt == null){
+            Log.e(TAG,"Gatt is null");
+            return;
+        }
+
+        bluetoothGatt.setCharacteristicNotification(characteristic,enable);
+
+        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(GattDescriptors.CLIENT_CHARACTERISTIC_CONFIG));
+        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        bluetoothGatt.writeDescriptor(descriptor);
+
+    }
+
+    public static boolean writeCharacteristic(UUID serviceUuid,BluetoothGattCharacteristic charac){
+        //check mBluetoothGatt is available
+        if (bluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return false;
+        }
+        BluetoothGattService Service = bluetoothGatt.getService(serviceUuid);
+        if (Service == null) {
+            Log.e(TAG, "service not found!");
+            return false;
+        }
+
+        if (charac == null) {
+            Log.e(TAG, "char not found!");
+            return false;
+        }
+
+        //byte[] b = text.getBytes(StandardCharsets.UTF_8)
+
+        byte[] value = new byte[1];
+
+        value[0] = (byte) (21 & 0xFF);
+        charac.setValue(value);
+        boolean status = bluetoothGatt.writeCharacteristic(charac);
+        return status;
+    }
+
+    public static void closeConnection(){
+        if(bluetoothGatt == null){
+            Log.e(TAG,"Gatt is null");
+            return;
+        }
+        bluetoothGatt.close();
+        bluetoothGatt = null;
+
     }
 
 }
