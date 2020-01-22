@@ -1,5 +1,6 @@
 package com.example.androidble;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -9,6 +10,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
@@ -16,6 +18,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.example.androidble.adapters.DeviceDataAdapter;
+import com.example.androidble.bluetooth.Bluetooth;
 import com.example.androidble.models.CharacteristicViewModel;
 import com.example.androidble.models.ServiceViewModel;
 import com.example.androidble.services.BluetoothLeScanService;
@@ -160,10 +163,42 @@ public class DeviceProfileActivity extends AppCompatActivity implements OnItemCl
 
     @Override
     public void onItemClicked(int position) {
-        //TODO DONT PASS BLUETOOTH GAT CHARACTERISTIC OBJ(GET SERVICE RETURN NULL)
-        Intent intent = new Intent(this,ServiceActivity.class);
-        intent.putParcelableArrayListExtra("char",mGattCharacteristics.get(position));
-        intent.putExtra("serviceUuid",dataSet.get(position).getUuid());
-        startActivity(intent);
+
+
+//        Intent intent = new Intent(this,ServiceActivity.class);
+//        intent.putParcelableArrayListExtra("char",mGattCharacteristics.get(position));
+//        intent.putExtra("serviceUuid",dataSet.get(position).getUuid());
+//        startActivity(intent);
+
+        showDialog(dataSet.get(position).getUuid(),mGattCharacteristics.get(position));
+
+    }
+
+    private void showDialog(final String serviceUuid, final List<BluetoothGattCharacteristic> characteristics){
+        // setup the alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(DeviceProfileActivity.this);
+        builder.setTitle("Select characteristic");
+
+        final String[] characteristicArr = new String[characteristics.size()];
+        for (int i = 0; i < characteristics.size(); i++) {
+
+            characteristicArr[i] = characteristics.get(i).getUuid().toString();
+
+        }
+        builder.setItems(characteristicArr, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //TODO DONT PASS BLUETOOTH GAT CHARACTERISTIC OBJ(GET SERVICE RETURN NULL)
+                Intent intent = new Intent(DeviceProfileActivity.this,ServiceActivity.class);
+                intent.putExtra("char", characteristics.get(which));
+                intent.putExtra("serviceUuid",serviceUuid);
+                startActivity(intent);
+
+            }
+        });
+
+// create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }

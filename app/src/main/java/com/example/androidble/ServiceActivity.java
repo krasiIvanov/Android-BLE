@@ -29,7 +29,6 @@ public class ServiceActivity extends AppCompatActivity {
     private TextView writable;
     private TextView notifications;
 
-    private ArrayList<BluetoothGattCharacteristic> gattCharacteristics;
     private BluetoothGattCharacteristic characteristic;
     private String serviceUuid;
 
@@ -38,20 +37,20 @@ public class ServiceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_service);
 
+
+        characteristic = getIntent().getParcelableExtra("char");
+        serviceUuid = getIntent().getStringExtra("serviceUuid");
+
+        if(characteristic == null && serviceUuid == null){
+            Log.e(TAG, "Characteristic not found ");
+            finish();
+        }
+
         readable = findViewById(R.id.readable);
         writable = findViewById(R.id.writable);
         notifications = findViewById(R.id.notification);
 
         subscribeBtn =findViewById(R.id.subscribe_btn);
-
-        gattCharacteristics = getIntent().getParcelableArrayListExtra("char");
-        serviceUuid = getIntent().getStringExtra("serviceUuid");
-        if(gattCharacteristics != null && serviceUuid != null){
-            characteristic = gattCharacteristics.get(0);
-        }else{
-            Log.e(TAG, "Characteristic not found ");
-            finish();
-        }
 
         boolean isReadable = isCharacteristicReadable(characteristic);
         boolean isWritable = isCharacteristicWritable(characteristic);

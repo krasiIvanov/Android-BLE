@@ -51,7 +51,7 @@ public class DeviceDataAdapter extends RecyclerView.Adapter<DeviceDataAdapter.Vi
         StringBuilder builder = new StringBuilder();
         for (CharacteristicViewModel model:dataSet.get(position).getCharacteristics()) {
 
-            builder.append(model.getName());
+            builder.append(model.getUuid());
             builder.append("\n");
 
         }

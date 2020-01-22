@@ -124,7 +124,8 @@ public class BluetoothLeScanService extends Service{
                                                  int status) {
                     if (status == BluetoothGatt.GATT_SUCCESS) {
 
-                        Log.e(TAG,"Characteristic read");
+                        String value = new String(characteristic.getValue());
+                        Log.e(TAG,"Characteristic read: " + value);
                     }
                 }
 
@@ -270,7 +271,7 @@ public class BluetoothLeScanService extends Service{
 
         byte[] value = new byte[1];
 
-        value[0] = (byte) (21 & 0xFF);
+        value[0] = (byte) (24 & 0xFF);
         bluetoothGattCharacteristic.setValue(value);
         boolean status = bluetoothGatt.writeCharacteristic(bluetoothGattCharacteristic);
 
