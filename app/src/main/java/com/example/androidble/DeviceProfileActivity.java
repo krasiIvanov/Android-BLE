@@ -160,7 +160,7 @@ public class DeviceProfileActivity extends AppCompatActivity implements OnItemCl
 
     @Override
     public void onItemClicked(int position) {
-
+        //TODO DONT PASS BLUETOOTH GAT CHARACTERISTIC OBJ(GET SERVICE RETURN NULL)
         Intent intent = new Intent(this,ServiceActivity.class);
         intent.putParcelableArrayListExtra("char",mGattCharacteristics.get(position));
         intent.putExtra("serviceUuid",dataSet.get(position).getUuid());

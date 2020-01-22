@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.example.androidble.bluetooth.Bluetooth;
 import com.example.androidble.services.BluetoothLeScanService;
@@ -24,6 +25,9 @@ public class ServiceActivity extends AppCompatActivity {
     private Button readBtn;
     private Button subscribeBtn;
     private EditText editText;
+    private TextView readable;
+    private TextView writable;
+    private TextView notifications;
 
     private ArrayList<BluetoothGattCharacteristic> gattCharacteristics;
     private BluetoothGattCharacteristic characteristic;
@@ -33,6 +37,10 @@ public class ServiceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_service);
+
+        readable = findViewById(R.id.readable);
+        writable = findViewById(R.id.writable);
+        notifications = findViewById(R.id.notification);
 
         subscribeBtn =findViewById(R.id.subscribe_btn);
 
@@ -44,12 +52,21 @@ public class ServiceActivity extends AppCompatActivity {
             Log.e(TAG, "Characteristic not found ");
             finish();
         }
+
+        boolean isReadable = isCharacteristicReadable(characteristic);
+        boolean isWritable = isCharacteristicWritable(characteristic);
+        boolean isNotifiable = isCharacteristicNotifiable(characteristic);
+
+        readable.setText("Readable: " + isReadable);
+        writable.setText("Writable: " + isWritable);
+        notifications.setText("Notifiable: " + isNotifiable);
+
         subscribeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 if (isCharacteristicNotifiable(characteristic)){
-                    BluetoothLeScanService.setSubscribeCharacteristic(gattCharacteristics.get(0),true);
+                    BluetoothLeScanService.setSubscribeCharacteristic(UUID.fromString(serviceUuid),characteristic,true);
                 }
             }
         });
@@ -73,6 +90,16 @@ public class ServiceActivity extends AppCompatActivity {
             }
         });
 
+        readBtn = findViewById(R.id.read_btn);
+
+        readBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                BluetoothLeScanService.readCharacteristic(UUID.fromString(serviceUuid),characteristic);
+
+            }
+        });
     }
 
 
